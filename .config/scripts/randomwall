@@ -1,0 +1,28 @@
+#!/bin/bash
+WALLPAPER_DIR="$HOME/Pictures/Wallpapers"
+
+if [ ! -d "$WALLPAPER_DIR" ]; then
+    echo "Wallpaper directory not found: $WALLPAPER_DIR"
+    exit 1
+fi
+
+mapfile -t WALLPAPERS < <(find "$WALLPAPER_DIR" -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.jpeg" -o -iname "*.webp" \))
+
+if [ ${#WALLPAPERS[@]} -eq 0 ]; then
+    echo "No wallpapers found in $WALLPAPER_DIR"
+    exit 1
+fi
+
+RANDOM_WALLPAPER="${WALLPAPERS[RANDOM % ${#WALLPAPERS[@]}]}"
+
+# Unload all previously set wallpapers
+hyprctl hyprpaper unload all
+
+# Preload the random wallpaper
+hyprctl hyprpaper preload "$RANDOM_WALLPAPER"
+
+# Set the wallpaper only on eDP-1
+hyprctl hyprpaper wallpaper "eDP-1,$RANDOM_WALLPAPER"
+
+echo "Wallpaper set on eDP-1 to: $RANDOM_WALLPAPER"
+

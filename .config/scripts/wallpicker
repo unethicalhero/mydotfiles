@@ -1,0 +1,32 @@
+#!/bin/bash
+
+WALLPAPER_DIR="$HOME/Pictures/Wallpapers"
+
+MONITOR=$(hyprctl monitors | grep Monitor | awk '{print $2}')
+
+if [ ! -d "$WALLPAPER_DIR" ]; then
+    echo "Wallpaper directory not found: $WALLPAPER_DIR"
+    exit 1
+fi
+
+declare -A WALLPAPER_MAP
+WALLPAPER_NAMES=()
+
+while IFS= read -r FILE; do
+    NAME=$(basename "$FILE" | sed 's/\.[^.]*$//')
+    WALLPAPER_MAP["$NAME"]="$FILE"
+    WALLPAPER_NAMES+=("$NAME")
+done < <(find "$WALLPAPER_DIR" -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.jpeg" -o -iname "*.webp" \))
+
+WALLPAPER_LIST=$(printf "%s\n" "${WALLPAPER_NAMES[@]}" | tofi -c ~/.config/tofi/configE)
+
+if [[ -n "$WALLPAPER_LIST" && -n "${WALLPAPER_MAP[$WALLPAPER_LIST]}" ]]; then
+    SELECTED_WALLPAPER="${WALLPAPER_MAP[$WALLPAPER_LIST]}"
+
+    hyprctl hyprpaper unload all
+    hyprctl hyprpaper preload "$SELECTED_WALLPAPER"
+    hyprctl hyprpaper wallpaper "$MONITOR, $SELECTED_WALLPAPER"
+else
+    echo "No valid wallpaper selected."
+fi
+

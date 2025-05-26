@@ -1,0 +1,17 @@
+
+#!/bin/bash
+
+read -rp "Enter timer duration (e.g. 5m, 30s, 1h20m) [default: 5m]: " duration
+duration="${duration:-5m}"
+
+command -v termdown >/dev/null || { echo "termdown is not installed."; exit 1; }
+
+termdown "$duration"
+notify-send "⏰ Timer Done" "Your $duration timer has finished!"
+
+sound_path="$HOME/Music/Sound Effects/morningcampkazoo.mp3"
+if command -v paplay >/dev/null; then
+    paplay "$sound_path"
+else
+    echo "paplay not found. Skipping sound alert."
+fi

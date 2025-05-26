@@ -1,0 +1,45 @@
+#!/bin/bash
+ifinstalled wl-clipboard mpv yt-dlp
+URL=$(wl-paste -t text)
+if [[ ! "$URL" =~ ^https?:// ]]; then
+  echo "Error: Clipboard does not contain a valid HTTP/HTTPS URL."
+  exit 1
+fi
+if [[ "$URL" =~ ^https?://(www\.)?youtube\.com/ || "$URL" =~ ^https?://(www\.)?youtu\.be/ ]]; then
+  declare -A quality_presets=(
+    ["1"]="240p (Low)"
+    ["2"]="360p (Low-Medium)"
+    ["3"]="480p (Medium)"
+    ["4"]="720p (High)"
+    ["5"]="1080p (Full HD)"
+  )
+  echo "Select a quality preset:"
+  for key in "${!quality_presets[@]}"; do
+    echo "$key) ${quality_presets[$key]}"
+  done
+  echo -n "Enter the number corresponding to your choice: "
+  read -n 1 choice
+  echo
+  if [[ ! -v "quality_presets[$choice]" ]]; then
+    echo "Error: Invalid selection."
+    exit 1
+  fi
+  declare -A format_selectors=(
+    ["1"]="bestvideo[height<=240]+bestaudio/best"
+    ["2"]="bestvideo[height<=360]+bestaudio/best"
+    ["3"]="bestvideo[height<=480]+bestaudio/best"
+    ["4"]="bestvideo[height<=720]+bestaudio/best"
+    ["5"]="bestvideo[height<=1080]+bestaudio/best"
+  )
+  mpv --ytdl-format="${format_selectors[$choice]}" "$URL"
+else
+  echo
+  read -rp "Quality options are not available for this link. Do you want to continue and open it in mpv? (y/n): " answer
+  if [[ "$answer" =~ ^[Yy]$ ]]; then
+    mpv "$URL"
+  else
+    echo "Operation cancelled."
+    exit 1
+  fi
+fi
+

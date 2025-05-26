@@ -1,0 +1,119 @@
+#!/bin/bash
+
+echo "Checking default applications..."
+echo "--------------------------------"
+
+declare -A app_defaults
+missing_defaults=()
+
+check_default() {
+    local mime_type="$1"
+    local actual
+    actual=$(xdg-mime query default "$mime_type")
+
+    if [[ -n "$actual" ]]; then
+        app_defaults["$actual"]+="$mime_type\n"
+    else
+        missing_defaults+=("$mime_type")
+    fi
+}
+
+mime_types=(
+    # Web Browsing
+    "text/html"
+    "x-scheme-handler/http"
+    "x-scheme-handler/https"
+
+    # Email
+    "x-scheme-handler/mailto"
+
+    # File Manager
+    "inode/directory"
+
+    # Text & Code Files
+    "text/plain"
+    "text/x-shellscript"
+    "text/x-python"
+    "text/x-csrc"
+    "text/x-c++src"
+    "application/json"
+    "application/x-yaml"
+    "text/markdown"
+
+    # PDFs
+    "application/pdf"
+
+    # Images
+    "image/png"
+    "image/jpeg"
+    "image/gif"
+    "image/webp"
+    "image/svg+xml"
+    "image/x-xcf"
+
+    # Videos
+    "video/mp4"
+    "video/x-matroska"
+    "video/webm"
+    "video/x-msvideo"
+
+    # Music & Audio
+    "audio/mpeg"
+    "audio/ogg"
+    "audio/x-wav"
+    "audio/flac"
+    "audio/mp4"
+
+    # Archives
+    "application/zip"
+    "application/x-7z-compressed"
+    "application/x-rar"
+    "application/x-tar"
+    "application/x-bzip"
+    "application/x-bzip2"
+    "application/x-xz"
+
+    # Office Documents
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    "application/msword"
+    "application/vnd.ms-excel"
+    "application/vnd.ms-powerpoint"
+    "application/vnd.oasis.opendocument.text"
+    "application/vnd.oasis.opendocument.spreadsheet"
+
+    # Disk Images
+    "application/x-iso9660-image"
+
+    # Screenshots
+    "image/x-portable-pixmap"
+
+    # Gaming
+    "x-scheme-handler/steam"
+    "x-scheme-handler/heroic"
+
+    # Remote Access
+    "x-scheme-handler/ssh"
+    "x-scheme-handler/vnc"
+)
+
+for mime in "${mime_types[@]}"; do
+    check_default "$mime"
+done
+
+for app in "${!app_defaults[@]}"; do
+    echo -e "📌 **$app** is the default for:"
+    echo -e "${app_defaults[$app]}" | sed 's/^/   - /'
+    echo
+done
+
+if [[ ${#missing_defaults[@]} -gt 0 ]]; then
+    echo "⚠️  The following MIME types have **no default application set**:"
+    for mime in "${missing_defaults[@]}"; do
+        echo "   - $mime"
+    done
+    echo
+else
+    echo "✅ All MIME types have a default application set."
+fi
+

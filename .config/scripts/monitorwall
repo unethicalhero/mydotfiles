@@ -1,0 +1,60 @@
+#!/bin/bash
+
+WALLPAPER_DIR="$HOME/Pictures/Wallpapers"
+
+# Check if the wallpaper directory exists
+if [ ! -d "$WALLPAPER_DIR" ]; then
+    echo "Wallpaper directory not found: $WALLPAPER_DIR"
+    exit 1
+fi
+
+# Find all image files in the wallpaper directory
+mapfile -t WALLPAPERS < <(find "$WALLPAPER_DIR" -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.jpeg" -o -iname "*.webp" \))
+
+# Check if any wallpapers were found
+if [ ${#WALLPAPERS[@]} -eq 0 ]; then
+    echo "No wallpapers found in $WALLPAPER_DIR"
+    exit 1
+fi
+
+# Select a random wallpaper
+RANDOM_WALLPAPER="${WALLPAPERS[RANDOM % ${#WALLPAPERS[@]}]}"
+
+# List available monitors
+MONITORS=($(hyprctl monitors | grep -oP 'Monitor \K\S+'))
+
+# Check if any monitors were found
+if [ ${#MONITORS[@]} -eq 0 ]; then
+    echo "No monitors found."
+    exit 1
+fi
+
+# Display the list of monitors
+echo "Available monitors:"
+for i in "${!MONITORS[@]}"; do
+    echo "$((i + 1)). ${MONITORS[$i]}"
+done
+
+# Prompt the user to select a monitor
+read -p "Enter the number of the monitor to set the wallpaper: " monitor_choice
+
+# Validate the user's input
+if ! [[ "$monitor_choice" =~ ^[0-9]+$ ]] || [ "$monitor_choice" -lt 1 ] || [ "$monitor_choice" -gt "${#MONITORS[@]}" ]; then
+    echo "Invalid selection."
+    exit 1
+fi
+
+# Get the selected monitor
+SELECTED_MONITOR="${MONITORS[$((monitor_choice - 1))]}"
+
+# Unload all current wallpapers
+hyprctl hyprpaper unload all
+
+# Preload the selected wallpaper
+hyprctl hyprpaper preload "$RANDOM_WALLPAPER"
+
+# Set the wallpaper on the selected monitor
+hyprctl hyprpaper wallpaper "$SELECTED_MONITOR,$RANDOM_WALLPAPER"
+
+echo "Wallpaper set to: $RANDOM_WALLPAPER on monitor $SELECTED_MONITOR"
+

@@ -1,0 +1,68 @@
+#!/bin/bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+echo "----------------------------------------------------"
+echo "UPDATING SYSTEM"
+echo "----------------------------------------------------"
+
+read -rp "Do you want to upgrade the system? [y/N]: " confirm
+confirm="${confirm,,}"  # lowercase
+if [[ "$confirm" == "y" || "$confirm" == "yes" ]]; then
+    sudo pacman -Syu
+else
+    echo "Skipping system upgrade."
+fi
+
+echo ""
+echo "----------------------------------------------------"
+echo "CLEARING PACMAN CACHE"
+echo "----------------------------------------------------"
+
+pacman_cache_used_before=$(du -sh /var/cache/pacman/pkg/ | awk '{print $1}')
+echo "Cache used before: $pacman_cache_used_before"
+
+echo "Keeping last 2 versions of installed packages:"
+sudo paccache -vrk2
+
+echo "Removing uninstalled packages:"
+sudo paccache -ruk0
+
+pacman_cache_used_after=$(du -sh /var/cache/pacman/pkg/ | awk '{print $1}')
+echo "Cache used after: $pacman_cache_used_after"
+
+echo ""
+echo "----------------------------------------------------"
+echo "REMOVING ORPHANED PACKAGES"
+echo "----------------------------------------------------"
+
+orphans=$(pacman -Qdtq)
+if [[ -n "$orphans" ]]; then
+    echo "Removing: $orphans"
+    sudo pacman -Rns $orphans
+else
+    echo "No orphaned packages to remove."
+fi
+
+echo ""
+echo "----------------------------------------------------"
+echo "CLEARING USER CACHE (~/.cache)"
+echo "----------------------------------------------------"
+
+user_cache_used=$(du -sh ~/.cache | awk '{print $1}')
+rm -rf ~/.cache/*
+echo "Cleared ~/.cache (was using $user_cache_used)"
+
+echo ""
+echo "----------------------------------------------------"
+echo "CLEARING SYSTEM JOURNAL LOGS"
+echo "----------------------------------------------------"
+
+sudo journalctl --vacuum-time=2d
+
+echo ""
+echo "----------------------------------------------------"
+echo "SYSTEM MAINTENANCE COMPLETE"
+echo "----------------------------------------------------"
+

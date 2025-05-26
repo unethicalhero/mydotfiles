@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+# Function to check current governor
+get_current_governor() {
+    echo -n "Current CPU governor: "
+    cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+    echo ""
+}
+
+# Function to change governor
+change_governor() {
+    local governor=$1
+    if sudo cpupower frequency-set -g "$governor"; then
+        echo "✅ CPU governor changed to: $governor"
+    else
+        echo "❌ Failed to change CPU governor. Are you in the 'power' group or using sudo?"
+    fi
+}
+
+# Display current governor
+get_current_governor
+
+# Display options
+echo "Select the CPU governor:"
+echo "1) Performance"
+echo "2) Powersave"
+echo "0) Cancel / Exit"
+read -rp "Enter your choice: " choice
+echo ""
+
+# Handle user choice
+case "$choice" in
+    1) change_governor "performance" ;;
+    2) change_governor "powersave" ;;
+    0) echo "Operation canceled." ;;
+    *) echo "❗ Invalid selection. Please enter 1, 2, or 0." ;;
+esac
+

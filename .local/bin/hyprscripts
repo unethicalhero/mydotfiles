@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Define the directory containing your scripts
+SCRIPT_DIR="$HOME/.config/scripts"
+
+# Check if the directory exists
+if [ ! -d "$SCRIPT_DIR" ]; then
+    echo "Directory $SCRIPT_DIR does not exist."
+    exit 1
+fi
+
+# List scripts and allow user to select one using tofi
+selected_script=$(ls "$SCRIPT_DIR" | tofi -c "$HOME/.config/tofi/configE")
+
+# Exit if no script was selected
+[ -z "$selected_script" ] && exit 0
+
+# Construct the full path to the selected script
+script_path="$SCRIPT_DIR/$selected_script"
+
+# Check if the selected script is executable
+if [ ! -x "$script_path" ]; then
+    echo "Selected script is not executable. Attempting to set execute permission."
+    chmod +x "$script_path"
+    if [ $? -ne 0 ]; then
+        echo "Failed to set execute permission on $script_path."
+        exit 1
+    fi
+fi
+
+# Execute the selected script in a new foot terminal
+foot -a ScriptsWin bash -c "\"$script_path\"; read -n 1 -s -r -p \"Press any key to exit...\""

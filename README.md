@@ -18,3 +18,10 @@ To get started, you can `curl` the setup script directly from GitHub:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/unethicalhero/mydotfiles/refs/heads/main/setup.sh | bash
 ```
+## Credit
+Used some scripts/dotfiles from these great people:
+- https://github.com/ChrisTitusTech
+- https://github.com/LukeSmithxyz/
+
+And for the wallpapers, make sure you check this amazing collection:
+- https://github.com/orangci/walls-catppuccin-mocha
